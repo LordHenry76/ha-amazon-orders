@@ -21,11 +21,14 @@ cards:
       {% if is_state('sensor.amazon_stato_prossimo_pacco', 'idle') %}Amazon
       {% elif items %}{{ items[0] | truncate(60, true, '…') }}
       {% else %}Pacco in arrivo{% endif %}
+    # Con più articoli nello stesso pacco aggiunge " · N articoli" alla prima riga
     secondary: >-
       {% set event = states('sensor.amazon_ultimo_evento_prossimo_pacco') %}
+      {% set n = (state_attr('sensor.amazon_stato_prossimo_pacco', 'items') or []) | count %}
+      {% set more = ' · ' ~ n ~ ' articoli' if n > 1 else '' %}
       {% if is_state('sensor.amazon_stato_prossimo_pacco', 'idle') %}Nessun pacco in arrivo
-      {% elif has_value('sensor.amazon_consegna_prossimo_pacco') %}{{ states('sensor.amazon_consegna_prossimo_pacco') }}{{ '\n' ~ event if has_value('sensor.amazon_ultimo_evento_prossimo_pacco') else '' }}
-      {% else %}Pacco in arrivo{% endif %}
+      {% elif has_value('sensor.amazon_consegna_prossimo_pacco') %}{{ states('sensor.amazon_consegna_prossimo_pacco') }}{{ more }}{{ '\n' ~ event if has_value('sensor.amazon_ultimo_evento_prossimo_pacco') else '' }}
+      {% else %}Pacco in arrivo{{ more }}{% endif %}
     multiline_secondary: true
     icon: >
       {% set i = state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) %}

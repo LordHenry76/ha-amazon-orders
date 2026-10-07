@@ -21,11 +21,14 @@ cards:
       {% if is_state('sensor.amazon_next_package_status', 'idle') %}Amazon
       {% elif items %}{{ items[0] | truncate(60, true, '…') }}
       {% else %}Package on its way{% endif %}
+    # With several items in the same package it adds " · N items" to the first line
     secondary: >-
       {% set event = states('sensor.amazon_next_package_last_event') %}
+      {% set n = (state_attr('sensor.amazon_next_package_status', 'items') or []) | count %}
+      {% set more = ' · ' ~ n ~ ' items' if n > 1 else '' %}
       {% if is_state('sensor.amazon_next_package_status', 'idle') %}Nothing on its way
-      {% elif has_value('sensor.amazon_next_package_delivery') %}{{ states('sensor.amazon_next_package_delivery') }}{{ '\n' ~ event if has_value('sensor.amazon_next_package_last_event') else '' }}
-      {% else %}Package on its way{% endif %}
+      {% elif has_value('sensor.amazon_next_package_delivery') %}{{ states('sensor.amazon_next_package_delivery') }}{{ more }}{{ '\n' ~ event if has_value('sensor.amazon_next_package_last_event') else '' }}
+      {% else %}Package on its way{{ more }}{% endif %}
     multiline_secondary: true
     icon: >
       {% set i = state_attr('sensor.amazon_next_package_step', 'step_index') | int(0) %}
