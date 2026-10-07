@@ -1,0 +1,35 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "package_in_transit": {
+        "default": "mdi:truck-outline",
+        "state": {
+          "on": "mdi:truck-delivery"
+        }
+      }
+    },
+    "sensor": {
+      "packages_in_transit": {
+        "default": "mdi:package-variant-closed"
+      },
+      "next_package_status": {
+        "default": "mdi:truck-delivery"
+      },
+      "next_package_step": {
+        "default": "mdi:stairs"
+      },
+      "next_package_progress": {
+        "default": "mdi:progress-check"
+      },
+      "next_package_expected": {
+        "default": "mdi:calendar-clock"
+      },
+      "next_package_last_event": {
+        "default": "mdi:map-marker-path"
+      },
+      "last_delivered": {
+        "default": "mdi:package-variant-closed-check"
+      }
+    }
+  }
+}

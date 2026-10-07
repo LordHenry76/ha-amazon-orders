@@ -1,0 +1,109 @@
+<!doctype html>
+<!--
+  Synthetic page for the tests: it reproduces the structure of an Amazon.it
+  "Track package" page (tags, classes and embedded JSON) with invented data.
+-->
+<html lang="it-it">
+<head>
+  <meta charset="utf-8">
+  <title>Traccia il tuo pacco</title>
+</head>
+<body class="a-m-it">
+<script type="a-state" data-a-state="{&quot;key&quot;:&quot;a-wlab-states&quot;}">{"AUI_TEST":"C"}</script>
+<script type="a-state" data-a-state="{&quot;key&quot;:&quot;page-state&quot;}">{"isLexicalExceptionMessagePresent":false,"orderId":"123-1234567-1234567","timezone":"Europe/Rome","shortStatus":"DELIVERED","itemIds":["testitem1"],"promise":{"secondaryPromiseIdentifier":"NONE","promiseMessage":"Consegnato 4 ottobre"},"packageIndex":"0","locale":"it_IT","progressTracker":{"lastTransitionPercentComplete":100,"lastReachedMilestone":"DELIVERED","numberOfReachedMilestones":4},"isMfn":false,"keepSecondaryUntouched":true,"customerId":"TESTCUSTOMER","trackingId":"TESTTRACKING123","deviceType":"desktop","isApp":false,"themeParameters":"o=123-1234567-1234567&s=TESTSHIP1&p=0","cpsData":{},"shipmentId":"TESTSHIP1","healthyStateIdentifier":"NOT_APPLICABLE","exceptionStateIdentifier":"NOT_APPLICABLE","visitTrigger":"NOTIFICATIONS"}</script>
+<div class="a-row a-spacing-small" id="topContent-container">
+  <div class="pt-card promise-card">
+    <a class="a-link-normal pt-promise-see-all-orders" href="/gp/your-account/order-history/?ref=ppx_pt2_dt_b_view_all_orders">Visualizza tutti gli ordini</a>
+    <h1 class="pt-promise-main-slot">Consegnato <span class="nowrap">4 ottobre</span></h1>
+    <div class="pt-promise-details-slot">Il pacco è stato consegnato presso il domicilio selezionato</div>
+  </div>
+</div>
+<div class="a-row cardContainer">
+  <div class="pt-card delivery-card">
+    <div class="pt-delivery-card-wrapper">
+      <div>
+        <h3 class="a-spacing-small">Consegna da Amazon</h3>
+        <div class="pt-delivery-card-trackingId">Numero della spedizione: TESTTRACKING123</div>
+        <span class="a-declarative">
+          <a class="a-link-normal tracking-events-modal-trigger pt-delivery-card-link" href="#">Visualizza tutti gli aggiornamenti</a>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="a-popover-preload" id="a-popover-tracking-events-modal">
+  <div id="tracking-events-container">
+    <div class="a-container">
+      <div class="a-row tracking-event-carrier-header">
+        <h2 class="a-spacing-small a-spacing-top-medium">Consegna da Amazon</h2>
+      </div>
+      <div class="a-row tracking-event-trackingId-text">
+        <h4 class="a-spacing-medium">Numero della spedizione: TESTTRACKING123</h4>
+      </div>
+      <div class="a-row">
+        <div class="a-row tracking-event-date-header">
+          <span class="tracking-event-date">domenica 4 ottobre</span>
+        </div>
+      <div class="a-row a-spacing-large a-spacing-top-medium">
+        <div class="a-column a-span3 tracking-event-time-left vertical-line-wrapper">
+          <span class="tracking-event-time">16:07</span>
+          <span class="vertical-line"></span>
+        </div>
+        <div class="a-column a-span9 tracking-event-time-right a-span-last">
+          <div class="a-row">
+            <span class="tracking-event-message">Consegnato</span>
+          </div>
+          <div class="a-row">
+            <span class="tracking-event-location">ROMA, IT</span>
+          </div>
+        </div>
+      </div>
+      <div class="a-row a-spacing-large a-spacing-top-medium">
+        <div class="a-column a-span3 tracking-event-time-left vertical-line-wrapper">
+          <span class="tracking-event-time">10:41</span>
+          <span class="vertical-line"></span>
+        </div>
+        <div class="a-column a-span9 tracking-event-time-right a-span-last">
+          <div class="a-row">
+            <span class="tracking-event-message">In consegna</span>
+          </div>
+          <div class="a-row">
+            <span class="tracking-event-location">Fiumicino, IT</span>
+          </div>
+        </div>
+      </div>
+      <div class="a-row a-spacing-large a-spacing-top-medium">
+        <div class="a-column a-span3 tracking-event-time-left vertical-line-wrapper">
+          <span class="tracking-event-time">6:49</span>
+          <span class="vertical-line"></span>
+        </div>
+        <div class="a-column a-span9 tracking-event-time-right a-span-last">
+          <div class="a-row">
+            <span class="tracking-event-message">Il pacco è arrivato presso la stazione di consegna finale</span>
+          </div>
+          <div class="a-row">
+            <span class="tracking-event-location">Fiumicino, IT</span>
+          </div>
+        </div>
+      </div>
+      <div class="a-row a-spacing-large a-spacing-top-medium">
+        <div class="a-column a-span3 tracking-event-time-left vertical-line-wrapper">
+          <span class="tracking-event-time"></span>
+          <span class="vertical-line"></span>
+        </div>
+        <div class="a-column a-span9 tracking-event-time-right a-span-last">
+          <div class="a-row">
+            <span class="tracking-event-message">Il pacco ha lasciato la struttura del mittente</span>
+          </div>
+          <div class="a-row">
+            <span class="tracking-event-location"></span>
+          </div>
+        </div>
+      </div>
+      </div>
+      <div class="a-row tracking-event-timezoneLabel">Le ore sono indicate secondo il fuso orario locale.</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

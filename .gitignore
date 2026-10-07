@@ -1,0 +1,14 @@
+# Local test material: account tokens, saved Amazon pages (orders, address),
+# proof-of-concept scripts and their virtualenv. Never commit any of this.
+/test/
+/amazon_auth*.json
+/ordini_*.html
+/tracking_*.html
+*.zip
+
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+.ruff_cache/

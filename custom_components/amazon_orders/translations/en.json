@@ -1,0 +1,95 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Amazon Orders",
+        "description": "Unofficial integration: it reads your orders from the same pages the Amazon website shows you. Signing in registers a device named \"Home Assistant Amazon Orders\" on your Amazon account. Your password is used once and is not stored.",
+        "data": {
+          "site": "Amazon site",
+          "email": "Email",
+          "password": "Password",
+          "otp": "Verification code"
+        },
+        "data_description": {
+          "site": "The Amazon website you place your orders on.",
+          "email": "The email address of your Amazon account.",
+          "otp": "The 6-digit code shown right now by your authenticator app. Two-step verification with an authenticator app must be enabled on the Amazon account: codes sent by SMS do not work."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Amazon sign-in required",
+        "description": "Amazon no longer accepts the stored session of {email}. Sign in again.",
+        "data": {
+          "password": "Password",
+          "otp": "Verification code"
+        },
+        "data_description": {
+          "otp": "The 6-digit code shown right now by your authenticator app."
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Amazon refused the sign-in: {amazon_message}",
+      "captcha": "Amazon asked for a CAPTCHA, which this integration cannot solve. Try again later.",
+      "cannot_connect": "Failed to connect to Amazon.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This Amazon account is already configured.",
+      "reauth_successful": "Signed in again.",
+      "wrong_account": "You signed in with a different Amazon account."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Polling intervals",
+        "data": {
+          "idle_interval": "While no package is out for delivery",
+          "active_interval": "While a package is out for delivery"
+        },
+        "data_description": {
+          "idle_interval": "How often Amazon is checked for new orders and for changes.",
+          "active_interval": "Very short intervals may make Amazon block the requests."
+        }
+      }
+    }
+  },
+  "selector": {
+    "site": {
+      "options": {
+        "it": "Amazon.it (Italy)"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "package_in_transit": {
+        "name": "Package in transit"
+      }
+    },
+    "sensor": {
+      "packages_in_transit": {
+        "name": "Packages in transit"
+      },
+      "next_package_status": {
+        "name": "Next package status"
+      },
+      "next_package_step": {
+        "name": "Next package step"
+      },
+      "next_package_progress": {
+        "name": "Next package progress"
+      },
+      "next_package_expected": {
+        "name": "Next package delivery"
+      },
+      "next_package_last_event": {
+        "name": "Next package last event"
+      },
+      "last_delivered": {
+        "name": "Last delivered package"
+      }
+    }
+  }
+}

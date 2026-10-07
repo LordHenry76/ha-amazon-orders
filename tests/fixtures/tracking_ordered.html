@@ -1,0 +1,72 @@
+<!doctype html>
+<!--
+  Synthetic page for the tests: it reproduces the structure of an Amazon.it
+  "Track package" page for an order just placed (tags, classes and embedded
+  JSON) with invented data.
+-->
+<html lang="it-it">
+<head>
+  <meta charset="utf-8">
+  <title>Traccia il tuo pacco</title>
+</head>
+<body class="a-m-it">
+<script type="a-state" data-a-state="{&quot;key&quot;:&quot;page-state&quot;}">{"deviceType":"desktop","isLexicalExceptionMessagePresent":false,"orderId":"123-1234567-1234567","timezone":"Europe/Rome","shortStatus":"ORDER_PLACED","itemIds":["testitem1"],"promise":{"secondaryPromiseIdentifier":"NONE","promiseMessage":"In arrivo domani"},"isApp":false,"themeParameters":"o=123-1234567-1234567&s=&p=0","locale":"it_IT","cpsData":{},"progressTracker":{"lastTransitionPercentComplete":32,"lastReachedMilestone":"ORDERED","numberOfReachedMilestones":1},"itemId":"testitem1","isMfn":false,"healthyStateIdentifier":"NOT_APPLICABLE","keepSecondaryUntouched":true,"primeDayCheer":false,"customerId":"TESTCUSTOMER","exceptionStateIdentifier":"NOT_APPLICABLE","visitTrigger":"UNKNOWN"}</script>
+<script type="a-state" data-a-state="{&quot;key&quot;:&quot;a-wlab-states&quot;}">{"AUI_TEST":"C"}</script>
+<div class="pt-redesign-header">
+  <section class="pt-card promise-card">
+    <a class="a-link-normal pt-promise-see-all-orders" href="/gp/your-account/order-history/?ref=ppx_pt2_dt_b_view_all_orders">Visualizza tutti gli ordini</a>
+    <h1 class="pt-promise-main-slot">In arrivo <span class="nowrap">domani</span></h1>
+  </section>
+  <section class="pt-card status-card">
+    <div class="pt-status-header">
+      <div class="pt-status-statuses">
+        <h1 class="pt-status-main-status">Ordinato</h1>
+      </div>
+    </div>
+    <div class="pt-status-milestones" role="list">
+    <div class="pt-status-milestone" role="listitem" data-reached="true" data-last-reached="true" data-percent-complete="100">
+      <div class="pt-status-milestone-marker">
+        <div class="pt-status-milestone-marker-check"></div>
+      </div>
+      <div class="pt-status-milestone-label" role="img" aria-label="Ordinato: Completo">
+        Ordinato
+      </div>
+    </div>
+    <div class="pt-status-milestone" role="listitem" data-reached="false" data-last-reached="false" data-percent-complete="10">
+      <div class="pt-status-milestone-bar">
+        <div class="pt-status-milestone-bar-progress"></div>
+      </div>
+      <div class="pt-status-milestone-marker">
+        <div class="pt-status-milestone-marker-check"></div>
+      </div>
+      <div class="pt-status-milestone-label" role="img" aria-label="Spedito: Incompleto">
+        Spedito
+      </div>
+    </div>
+    <div class="pt-status-milestone" role="listitem" data-reached="false" data-last-reached="false" data-percent-complete="0">
+      <div class="pt-status-milestone-bar">
+        <div class="pt-status-milestone-bar-progress"></div>
+      </div>
+      <div class="pt-status-milestone-marker">
+        <div class="pt-status-milestone-marker-check"></div>
+      </div>
+      <div class="pt-status-milestone-label" role="img" aria-label="In consegna: Incompleto">
+        In consegna
+      </div>
+    </div>
+    <div class="pt-status-milestone" role="listitem" data-reached="false" data-last-reached="false" data-percent-complete="0">
+      <div class="pt-status-milestone-bar">
+        <div class="pt-status-milestone-bar-progress"></div>
+      </div>
+      <div class="pt-status-milestone-marker">
+        <div class="pt-status-milestone-marker-check"></div>
+      </div>
+      <div class="pt-status-milestone-label" role="img" aria-label="Consegnato: Incompleto">
+        Consegnato
+      </div>
+    </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

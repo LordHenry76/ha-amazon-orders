@@ -1,0 +1,13 @@
+Amazon Orders for Home Assistant
+Copyright (c) 2026 LordHenry76
+
+This project is licensed under the MIT License (see LICENSE).
+
+It includes code adapted from aioamazondevices
+(https://github.com/chemelli74/aioamazondevices)
+Copyright 2024 Simone Chemelli and contributors
+Licensed under the Apache License, Version 2.0 (see LICENSES/Apache-2.0.txt).
+
+The adapted code is the Amazon sign-in flow (login, device registration and
+token exchange) in custom_components/amazon_orders/api/auth.py. It was rewritten
+for this project: it is not a copy of the original files.

@@ -1,0 +1,95 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Amazon Orders",
+        "description": "Integrazione non ufficiale: legge i tuoi ordini dalle stesse pagine che ti mostra il sito Amazon. L'accesso registra sul tuo account Amazon un dispositivo chiamato \"Home Assistant Amazon Orders\". La password viene usata una sola volta e non viene salvata.",
+        "data": {
+          "site": "Sito Amazon",
+          "email": "Email",
+          "password": "Password",
+          "otp": "Codice di verifica"
+        },
+        "data_description": {
+          "site": "Il sito Amazon su cui fai i tuoi ordini.",
+          "email": "L'indirizzo email del tuo account Amazon.",
+          "otp": "Il codice a 6 cifre mostrato in questo momento dalla tua app di autenticazione. Sull'account Amazon deve essere attiva la verifica in due passaggi con app di autenticazione: i codici via SMS non funzionano."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Accesso ad Amazon richiesto",
+        "description": "Amazon non accetta più la sessione salvata di {email}. Accedi di nuovo.",
+        "data": {
+          "password": "Password",
+          "otp": "Codice di verifica"
+        },
+        "data_description": {
+          "otp": "Il codice a 6 cifre mostrato in questo momento dalla tua app di autenticazione."
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Amazon ha rifiutato l'accesso: {amazon_message}",
+      "captcha": "Amazon ha chiesto un CAPTCHA, che questa integrazione non può risolvere. Riprova più tardi.",
+      "cannot_connect": "Impossibile connettersi ad Amazon.",
+      "unknown": "Errore imprevisto."
+    },
+    "abort": {
+      "already_configured": "Questo account Amazon è già configurato.",
+      "reauth_successful": "Accesso eseguito di nuovo.",
+      "wrong_account": "Hai eseguito l'accesso con un account Amazon diverso."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Intervalli di aggiornamento",
+        "data": {
+          "idle_interval": "Quando nessun pacco è in consegna",
+          "active_interval": "Quando un pacco è in consegna"
+        },
+        "data_description": {
+          "idle_interval": "Ogni quanto controllare su Amazon nuovi ordini e cambiamenti.",
+          "active_interval": "Intervalli molto brevi possono portare Amazon a bloccare le richieste."
+        }
+      }
+    }
+  },
+  "selector": {
+    "site": {
+      "options": {
+        "it": "Amazon.it (Italia)"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "package_in_transit": {
+        "name": "Pacco in arrivo"
+      }
+    },
+    "sensor": {
+      "packages_in_transit": {
+        "name": "Pacchi in arrivo"
+      },
+      "next_package_status": {
+        "name": "Stato prossimo pacco"
+      },
+      "next_package_step": {
+        "name": "Tappa prossimo pacco"
+      },
+      "next_package_progress": {
+        "name": "Avanzamento prossimo pacco"
+      },
+      "next_package_expected": {
+        "name": "Consegna prossimo pacco"
+      },
+      "next_package_last_event": {
+        "name": "Ultimo evento prossimo pacco"
+      },
+      "last_delivered": {
+        "name": "Ultimo pacco consegnato"
+      }
+    }
+  }
+}
