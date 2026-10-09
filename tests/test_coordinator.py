@@ -409,7 +409,7 @@ def test_package_progress_without_steps() -> None:
         tracking=tracking,
     )
     assert package.progress == 50
-    
+
 
 async def test_locker_picked_up_is_not_in_transit(
     hass: HomeAssistant, mock_amazon
