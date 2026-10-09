@@ -35,6 +35,37 @@ class Shipment:
 
 
 @dataclass(frozen=True, slots=True)
+class Address:
+    """A delivery address, line by line as Amazon shows it, the name first.
+
+    It is personal data: never put it in logs, diagnostics or events.
+    """
+
+    lines: tuple[str, ...]
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the recipient."""
+        return self.lines[0] if self.lines else None
+
+    @property
+    def city(self) -> str | None:
+        """Return the town, from the line written as "Town, province postcode"."""
+        for line in reversed(self.lines[1:]):
+            town, comma, _ = line.partition(",")
+            town = town.strip()
+            if comma and town:
+                # Amazon writes some towns in capitals ("SAN TEST MARINA").
+                return town.title() if town.isupper() else town
+        return None
+
+    @property
+    def street(self) -> str | None:
+        """Return the address without the name, on one line."""
+        return ", ".join(self.lines[1:]) or None
+
+
+@dataclass(frozen=True, slots=True)
 class Order:
     """An order card from the orders list."""
 
@@ -43,6 +74,7 @@ class Order:
     total_text: str | None
     details_url: str | None
     shipments: tuple[Shipment, ...] = ()
+    address: Address | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,6 +117,8 @@ class Tracking:
     # of the website. Amazon shows them only until the package is delivered.
     status_label: str | None = None
     milestones: tuple[Milestone, ...] = ()
+    # Where the package goes. Seen on the page once the package has been shipped.
+    address: Address | None = None
     # The whole JSON the page embeds, as Amazon sent it. It holds identifiers of
     # the order and of the customer: never expose it as it is.
     raw_state: dict[str, Any] = field(default_factory=dict, compare=False, repr=False)

@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup, SoupStrainer, Tag
 
 from .exceptions import AmazonParseError
 from .models import (
+    Address,
     Milestone,
     Order,
     OrderItem,
@@ -26,6 +27,7 @@ _ORDER_ID_RE = re.compile(r"\b\d{3}-\d{7}-\d{7}\b")
 # ("order-card js-order-card"): a plain string would have to equal all of it.
 _ORDER_CARD_CLASS_RE = re.compile(r"(?:^|\s)js-order-card(?:\s|$)")
 _STATUS_CARD_CLASS_RE = re.compile(r"(?:^|\s)status-card(?:\s|$)")
+_SHIPPING_ADDRESS_CLASS_RE = re.compile(r"(?:^|\s)shippingAddress(?:\s|$)")
 _PAGE_STATE_RE = re.compile(
     r'<script\b[^>]*\bdata-a-state="[^"]*page-state[^"]*"[^>]*>(.*?)</script>',
     re.DOTALL,
@@ -102,6 +104,31 @@ def _parse_order_card(card: Tag, base_url: str) -> Order | None:
         shipments=tuple(
             _parse_delivery_box(box, base_url) for box in card.select(".delivery-box")
         ),
+        address=_parse_order_address(card),
+    )
+
+
+def _address(lines: list[str | None]) -> Address | None:
+    clean = tuple(line for line in lines if line)
+    return Address(lines=clean) if clean else None
+
+
+def _parse_order_address(card: Tag) -> Address | None:
+    """Read the address of the "Ship to" popover.
+
+    The page keeps it in a template script that its own code copies into the
+    header, so it is parsed on its own.
+    """
+    template = card.select_one('script[id^="shipToData-"]')
+    if template is None or not template.string:
+        return None
+    popover = BeautifulSoup(template.string, "html.parser").select_one(
+        ".a-popover-preload"
+    )
+    if popover is None:
+        return None
+    return _address(
+        [" ".join(line.split()) for line in popover.get_text("\n").splitlines()]
     )
 
 
@@ -174,6 +201,11 @@ def parse_tracking(html: str) -> Tracking:
     status_card = BeautifulSoup(
         html, "html.parser", parse_only=SoupStrainer(class_=_STATUS_CARD_CLASS_RE)
     )
+    shipping_address = BeautifulSoup(
+        html,
+        "html.parser",
+        parse_only=SoupStrainer(class_=_SHIPPING_ADDRESS_CLASS_RE),
+    )
 
     return Tracking(
         order_id=_as_str(state.get("orderId")),
@@ -192,6 +224,9 @@ def parse_tracking(html: str) -> Tracking:
         milestones=tuple(
             _parse_milestone(element)
             for element in status_card.select(".pt-status-milestone")
+        ),
+        address=_address(
+            [_text(line) for line in shipping_address.select(".shippingAddress p")]
         ),
         raw_state=state,
     )
@@ -240,8 +275,10 @@ def _parse_events(container: Tag) -> list[TrackingEvent]:
                 "message": None,
                 "location": None,
             }
+        elif current is not None and "tracking-event-message" in classes:
+            current["message"] = _text(element)
         elif current is not None:
-            key = "message" if "tracking-event-message" in classes else "location"
-            current[key] = _text(element)
+            # Couriers other than Amazon leave a dangling comma ("Hub IT, ").
+            current["location"] = (_text(element) or "").rstrip(" ,") or None
     flush()
     return events

@@ -1,68 +1,80 @@
-# Card pacco Amazon: intestazione, timeline a 4 tappe, tappa, ultimo evento, numero d'ordine e destinazione.
-# Senza pacchi in arrivo resta una riga sola; si espande quando c'è un pacco in viaggio.
+# Amazon package card, with the Amazon logo instead of the icon: header, four-step timeline, step, last event, order number and destination.
+# It stays on one line while nothing is on its way and expands when a package is.
 #
-# Richiede queste card (tutte disponibili in HACS):
+# It needs these cards (all available in HACS):
 #   - Mushroom            https://github.com/piitaya/lovelace-mushroom
 #   - card-mod            https://github.com/thomasloven/lovelace-card-mod
 #   - Vertical Stack In Card  https://github.com/ofekashery/vertical-stack-in-card
 #
-# ID DELLE ENTITÀ: questo file usa gli ID che Home Assistant crea in italiano (`sensor.amazon_...`).
-# Controlla i tuoi in Impostazioni > Entità (cerca "amazon") e fai cerca/sostituisci prima di incollare.
+# It also needs the logo image: copy `custom_components/amazon_orders/brand/icon.png` to
+# `/config/www/amazon_orders/icon.png` (if the `www` folder did not exist, restart Home Assistant once).
 #
-# Mostra il "prossimo pacco", cioè quello più avanti nella consegna. Alla consegna la card torna a riposo.
-# PRIVACY: l'ultima riga mostra numero d'ordine, destinatario e città. Se il dashboard è
-# visibile ad altri, cancella l'ultimo blocco ("Numero d'ordine e destinazione").
+# ENTITY IDS: this file uses the ids Home Assistant creates in English (`sensor.amazon_...`).
+# Check yours in Settings > Entities (search "amazon") and find/replace them before pasting.
+#
+# It shows the "next package", the one furthest along. Once delivered the card goes back to idle.
+# PRIVACY: the last row shows the order number, the recipient and the town. If others can see
+# the dashboard, delete the last block ("Order number and destination").
 
 type: custom:vertical-stack-in-card
 cards:
-  # ── Intestazione ──
+  # ── Header ──
   - type: custom:mushroom-template-card
-    entity: sensor.amazon_stato_prossimo_pacco
+    entity: sensor.amazon_next_package_status
     primary: >
-      {% set items = state_attr('sensor.amazon_stato_prossimo_pacco', 'items') or [] %}
-      {% if is_state('sensor.amazon_stato_prossimo_pacco', 'idle') %}Amazon
+      {% set items = state_attr('sensor.amazon_next_package_status', 'items') or [] %}
+      {% if is_state('sensor.amazon_next_package_status', 'idle') %}Amazon
       {% elif items %}{{ items[0] | truncate(60, true, '…') }}
-      {% else %}Pacco in arrivo{% endif %}
-    # Con più articoli nello stesso pacco aggiunge " · N articoli" alla prima riga
+      {% else %}Package on its way{% endif %}
+    # With several items in the same package it adds " · N items" to the first line
     secondary: >-
-      {% set event = states('sensor.amazon_ultimo_evento_prossimo_pacco') %}
-      {% set n = (state_attr('sensor.amazon_stato_prossimo_pacco', 'items') or []) | count %}
-      {% set more = ' · ' ~ n ~ ' articoli' if n > 1 else '' %}
-      {% if is_state('sensor.amazon_stato_prossimo_pacco', 'idle') %}Nessun pacco in arrivo
-      {% elif has_value('sensor.amazon_consegna_prossimo_pacco') %}{{ states('sensor.amazon_consegna_prossimo_pacco') }}{{ more }}{{ '\n' ~ event if has_value('sensor.amazon_ultimo_evento_prossimo_pacco') else '' }}
-      {% else %}Pacco in arrivo{{ more }}{% endif %}
+      {% set event = states('sensor.amazon_next_package_last_event') %}
+      {% set n = (state_attr('sensor.amazon_next_package_status', 'items') or []) | count %}
+      {% set more = ' · ' ~ n ~ ' items' if n > 1 else '' %}
+      {% if is_state('sensor.amazon_next_package_status', 'idle') %}Nothing on its way
+      {% elif has_value('sensor.amazon_next_package_delivery') %}{{ states('sensor.amazon_next_package_delivery') }}{{ more }}{{ '\n' ~ event if has_value('sensor.amazon_next_package_last_event') else '' }}
+      {% else %}Package on its way{{ more }}{% endif %}
     multiline_secondary: true
-    icon: >
-      {% set i = state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) %}
-      {% if is_state('sensor.amazon_stato_prossimo_pacco', 'idle') %}mdi:package-variant-closed
-      {% elif i >= 3 %}mdi:truck-delivery
-      {% elif i == 2 %}mdi:truck-fast
-      {% else %}mdi:cart-check{% endif %}
-    color: >
-      {{ 'grey' if is_state('sensor.amazon_stato_prossimo_pacco', 'idle') else 'orange' }}
-    # Il tocco apre i tuoi ordini sul sito Amazon
+    picture: /local/amazon_orders/icon.png
+    # Tap opens your orders on the Amazon website
     tap_action:
       action: url
       url_path: https://www.amazon.it/your-orders/orders
-    # La pressione prolungata controlla subito lo stato su Amazon
+    # Hold checks the state on Amazon right away
     hold_action:
       action: perform-action
       perform_action: homeassistant.update_entity
       target:
-        entity_id: sensor.amazon_stato_prossimo_pacco
+        entity_id: sensor.amazon_next_package_status
+    card_mod:
+      style:
+        # White disc behind the logo, which would otherwise vanish on dark themes.
+        ha-tile-icon$: |
+          .container {
+            background: #fff;
+            {% if is_state('sensor.amazon_next_package_status', 'idle') %}
+            filter: grayscale(1);
+            opacity: 0.5;
+            {% endif %}
+          }
+          .container img {
+            box-sizing: border-box;
+            padding: 5px;
+            object-fit: contain;
+          }
 
-  # ── Timeline a 4 tappe: la linea avanza come nell'app Amazon (non cliccabile) ──
+  # ── Four-step timeline: the line moves on as in the Amazon app (not clickable) ──
   - type: conditional
     conditions:
       - condition: state
-        entity: sensor.amazon_stato_prossimo_pacco
+        entity: sensor.amazon_next_package_status
         state_not: idle
     card:
       type: custom:mushroom-chips-card
       alignment: justify
       card_mod:
         style: |
-          {% set stop = states('sensor.amazon_avanzamento_prossimo_pacco') | int(0) %}
+          {% set stop = states('sensor.amazon_next_package_progress') | int(0) %}
           ha-card {
             position: relative;
             z-index: 0;
@@ -84,76 +96,76 @@ cards:
               rgba(127, 127, 127, 0.3) {{ stop }}%);
           }
       chips:
-        # 1 · Ordinato
+        # 1 · Ordered
         - type: template
           icon: >
-            {% set i = state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) %}
+            {% set i = state_attr('sensor.amazon_next_package_step', 'step_index') | int(0) %}
             {{ 'mdi:check' if i > 1 else 'mdi:cart-check' }}
           icon_color: >
-            {% set i = state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) %}
+            {% set i = state_attr('sensor.amazon_next_package_step', 'step_index') | int(0) %}
             {{ 'orange' if i >= 1 else 'disabled' }}
           tap_action: { action: none }
           hold_action: { action: none }
           double_tap_action: { action: none }
           card_mod:
             style: |
-              {% if state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) == 1 %}
+              {% if state_attr('sensor.amazon_next_package_step', 'step_index') | int(0) == 1 %}
               ha-card { --chip-background: color-mix(in srgb, #ff9900 25%, var(--ha-card-background, var(--card-background-color))); }
               {% endif %}
-        # 2 · Spedito
+        # 2 · Shipped
         - type: template
           icon: >
-            {% set i = state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) %}
+            {% set i = state_attr('sensor.amazon_next_package_step', 'step_index') | int(0) %}
             {{ 'mdi:check' if i > 2 else 'mdi:package-variant-closed' }}
           icon_color: >
-            {% set i = state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) %}
+            {% set i = state_attr('sensor.amazon_next_package_step', 'step_index') | int(0) %}
             {{ 'orange' if i >= 2 else 'disabled' }}
           tap_action: { action: none }
           hold_action: { action: none }
           double_tap_action: { action: none }
           card_mod:
             style: |
-              {% if state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) == 2 %}
+              {% if state_attr('sensor.amazon_next_package_step', 'step_index') | int(0) == 2 %}
               ha-card { --chip-background: color-mix(in srgb, #ff9900 25%, var(--ha-card-background, var(--card-background-color))); }
               {% endif %}
-        # 3 · In consegna
+        # 3 · Out for delivery
         - type: template
           icon: >
-            {% set i = state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) %}
+            {% set i = state_attr('sensor.amazon_next_package_step', 'step_index') | int(0) %}
             {{ 'mdi:check' if i > 3 else 'mdi:truck-delivery' }}
           icon_color: >
-            {% set i = state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) %}
+            {% set i = state_attr('sensor.amazon_next_package_step', 'step_index') | int(0) %}
             {{ 'orange' if i >= 3 else 'disabled' }}
           tap_action: { action: none }
           hold_action: { action: none }
           double_tap_action: { action: none }
           card_mod:
             style: |
-              {% if state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) == 3 %}
+              {% if state_attr('sensor.amazon_next_package_step', 'step_index') | int(0) == 3 %}
               ha-card { --chip-background: color-mix(in srgb, #ff9900 25%, var(--ha-card-background, var(--card-background-color))); }
               {% endif %}
-        # 4 · Consegnato
+        # 4 · Delivered
         - type: template
           icon: >
-            {% set i = state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) %}
+            {% set i = state_attr('sensor.amazon_next_package_step', 'step_index') | int(0) %}
             {{ 'mdi:check' if i > 4 else 'mdi:home-import-outline' }}
           icon_color: >
-            {% set i = state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) %}
+            {% set i = state_attr('sensor.amazon_next_package_step', 'step_index') | int(0) %}
             {{ 'orange' if i >= 4 else 'disabled' }}
           tap_action: { action: none }
           hold_action: { action: none }
           double_tap_action: { action: none }
           card_mod:
             style: |
-              {% if state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) == 4 %}
+              {% if state_attr('sensor.amazon_next_package_step', 'step_index') | int(0) == 4 %}
               ha-card { --chip-background: color-mix(in srgb, #ff9900 25%, var(--ha-card-background, var(--card-background-color))); }
               {% endif %}
 
-  # ── Tappa, ultimo evento, altri pacchi (non cliccabili) ──
+  # ── Step, last event, other packages (not clickable) ──
   - type: conditional
     conditions:
       - condition: state
-        entity: sensor.amazon_stato_prossimo_pacco
+        entity: sensor.amazon_next_package_status
         state_not: idle
     card:
       type: custom:mushroom-chips-card
@@ -168,12 +180,12 @@ cards:
         - type: conditional
           conditions:
             - condition: state
-              entity: sensor.amazon_tappa_prossimo_pacco
+              entity: sensor.amazon_next_package_step
               state_not: unknown
           chip:
             type: template
             icon: mdi:timeline-check
-            content: "{{ states('sensor.amazon_tappa_prossimo_pacco') }}"
+            content: "{{ states('sensor.amazon_next_package_step') }}"
             icon_color: orange
             tap_action: { action: none }
             hold_action: { action: none }
@@ -181,16 +193,16 @@ cards:
         - type: conditional
           conditions:
             - condition: state
-              entity: sensor.amazon_ultimo_evento_prossimo_pacco
+              entity: sensor.amazon_next_package_last_event
               state_not: unknown
           chip:
             type: template
             icon: mdi:map-marker-path
             content: >
-              {% set time = state_attr('sensor.amazon_ultimo_evento_prossimo_pacco', 'time') %}
-              {% set place = state_attr('sensor.amazon_ultimo_evento_prossimo_pacco', 'location') %}
-              {% set day = state_attr('sensor.amazon_ultimo_evento_prossimo_pacco', 'date') %}
-              {{ [time, place] | select | join(' · ') or day or states('sensor.amazon_ultimo_evento_prossimo_pacco') }}
+              {% set time = state_attr('sensor.amazon_next_package_last_event', 'time') %}
+              {% set place = state_attr('sensor.amazon_next_package_last_event', 'location') %}
+              {% set day = state_attr('sensor.amazon_next_package_last_event', 'date') %}
+              {{ [time, place] | select | join(' · ') or day or states('sensor.amazon_next_package_last_event') }}
             icon_color: orange
             tap_action: { action: none }
             hold_action: { action: none }
@@ -198,24 +210,24 @@ cards:
         - type: conditional
           conditions:
             - condition: numeric_state
-              entity: sensor.amazon_pacchi_in_arrivo
+              entity: sensor.amazon_packages_in_transit
               above: 1
           chip:
             type: template
             icon: mdi:package-variant-closed-plus
             content: >
-              {% set n = states('sensor.amazon_pacchi_in_arrivo') | int(1) - 1 %}
-              +{{ n }} {{ 'altro pacco' if n == 1 else 'altri pacchi' }}
+              {% set n = states('sensor.amazon_packages_in_transit') | int(1) - 1 %}
+              +{{ n }} {{ 'more package' if n == 1 else 'more packages' }}
             icon_color: grey
             tap_action: { action: none }
             hold_action: { action: none }
             double_tap_action: { action: none }
 
-  # ── Numero d'ordine e destinazione (non cliccabili) ──
+  # ── Order number and destination (not clickable) ──
   - type: conditional
     conditions:
       - condition: state
-        entity: sensor.amazon_stato_prossimo_pacco
+        entity: sensor.amazon_next_package_status
         state_not: idle
     card:
       type: custom:mushroom-chips-card
@@ -229,7 +241,7 @@ cards:
       chips:
         - type: template
           icon: mdi:receipt-text-outline
-          content: "{{ state_attr('sensor.amazon_stato_prossimo_pacco', 'order_id') }}"
+          content: "{{ state_attr('sensor.amazon_next_package_status', 'order_id') }}"
           icon_color: grey
           tap_action: { action: none }
           hold_action: { action: none }
@@ -237,7 +249,7 @@ cards:
         - type: template
           icon: mdi:map-marker-account-outline
           content: >
-            {% set s = 'sensor.amazon_stato_prossimo_pacco' %}
+            {% set s = 'sensor.amazon_next_package_status' %}
             {{ [state_attr(s, 'recipient'), state_attr(s, 'delivery_city')] | select | join(' · ') }}
           icon_color: grey
           tap_action: { action: none }

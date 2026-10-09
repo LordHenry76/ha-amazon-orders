@@ -66,22 +66,26 @@ delivered yet, the one that has gone through the most steps.
 | Package in transit (binary sensor) | On while at least one package is on its way. |
 | Next package status | Amazon's state code in lower case, `idle` when nothing is on its way. |
 | Next package step | The current step of the delivery, in the language of the website (on amazon.it: "Ordinato", "Spedito", "In consegna", "Consegnato"). The attributes `step_index`, `step_count` and `steps` give its position and the whole list. |
-| Next package progress | Progress of the delivery, in percent. |
+| Next package progress | How far the whole delivery has gone, in percent (0 when ordered, 100 when delivered). The attribute `step_progress` is Amazon's own figure: how much of the stretch to the next step has been covered. |
 | Next package delivery | Amazon's own message about the delivery, in the language of the website (e.g. "In arrivo domani"). |
 | Next package last event | The latest entry of the tracking history; date, time and place are attributes. |
 | Last delivered package | Amazon's message for the most recent delivery (e.g. "Consegnato 4 ottobre"). |
 
 The status sensor and the last delivered package carry the details as attributes: `order_id`,
-`order_placed`, `items`, `status`, `milestone`, `step`, `step_label`, `progress`, `expected`,
-`carrier`, `status_text`, `status_detail`, `last_event`, `tracking_url`.
+`order_placed`, `items`, `status`, `milestone`, `step`, `step_label`, `progress`, `step_progress`,
+`expected`, `carrier`, `status_text`, `status_detail`, `last_event`, `tracking_url`, `recipient`,
+`delivery_city`, `delivery_address`.
+
+The address attributes come from your Amazon account and are personal data: they are left out of
+the event and of the diagnostics file.
 
 Limits:
 
 - Only the shipments Amazon offers a "Track package" page for are followed. Orders fulfilled by
   third-party sellers often have none, and are ignored.
 - Only the orders of the last three months are read.
-- The state codes seen so far are `order_placed` and `delivered`; the others are shown as Amazon
-  sends them.
+- The state codes seen so far are `order_placed`, `in_transit`, `out_for_delivery` and
+  `delivered`; any other is shown as Amazon sends it.
 
 ## Event
 
@@ -111,9 +115,15 @@ Nothing fires for what is found when Home Assistant starts.
 
 [`examples/package-card.yaml`](examples/package-card.yaml) is a card for the next package
 (Italian entity ids and texts: [`examples/package-card.it.yaml`](examples/package-card.it.yaml)).
-It stays on one line while nothing is on its way and expands when a package is: progress bar,
-expected delivery, the four-step timeline, current step and last tracking event. Once the
-package is delivered the card goes back to idle.
+It stays on one line while nothing is on its way and expands when a package is: expected
+delivery, the four-step timeline (its line moves on as Amazon's does), current step, last tracking
+event, order number and destination. Once the package is delivered the card goes back to idle.
+
+[`examples/package-card-logo.yaml`](examples/package-card-logo.yaml) (Italian:
+[`examples/package-card-logo.it.yaml`](examples/package-card-logo.it.yaml)) is the same card with the
+Amazon logo instead of the package icon. Copy
+`custom_components/amazon_orders/brand/icon.png` to `/config/www/amazon_orders/icon.png` first
+(restart Home Assistant once if the `www` folder did not exist).
 
 It needs three frontend cards from HACS: [Mushroom](https://github.com/piitaya/lovelace-mushroom),
 [card-mod](https://github.com/thomasloven/lovelace-card-mod) and
@@ -121,6 +131,10 @@ It needs three frontend cards from HACS: [Mushroom](https://github.com/piitaya/l
 
 Entity ids depend on your Home Assistant language, so check yours in **Settings → Entities**
 and find/replace them in the file before pasting.
+
+> **Privacy:** the last row of the card shows the order number, the recipient's name and the town.
+> If other people can see the dashboard (a wall tablet, a shared account), delete the last block of
+> the card, "Order number and destination".
 
 ## Options
 

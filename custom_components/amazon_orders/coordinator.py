@@ -15,6 +15,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import (
+    Address,
     AmazonAuth,
     AmazonAuthError,
     AmazonCaptchaError,
@@ -31,6 +32,7 @@ from .const import (
     CONF_IDLE_INTERVAL,
     DEFAULT_ACTIVE_INTERVAL,
     DEFAULT_IDLE_INTERVAL,
+    DEFAULT_STEPS,
     DOMAIN,
     EVENT_PACKAGE_UPDATE,
     MAX_NEW_TRACKING_PER_UPDATE,
@@ -55,6 +57,8 @@ class Package:
     tracking_url: str
     item_titles: tuple[str, ...]
     tracking: Tracking
+    # The address on the orders list, used until the tracking page shows one.
+    order_address: Address | None = None
 
     @property
     def status(self) -> str | None:
@@ -74,6 +78,32 @@ class Package:
     def step_labels(self) -> list[str]:
         """Return the names of all the steps of the delivery."""
         return [step.label for step in self.tracking.milestones if step.label]
+
+    @property
+    def address(self) -> Address | None:
+        """Return where the package goes."""
+        return self.tracking.address or self.order_address
+
+    @property
+    def progress(self) -> int | None:
+        """Return how far the whole delivery has gone, in percent.
+
+        Amazon gives the steps reached and how much of the stretch to the next
+        step has been covered: 92 % on "Shipped" means almost out for delivery,
+        which is about two thirds of the whole way.
+        """
+        tracking = self.tracking
+        if tracking.is_delivered:
+            return 100
+        reached = tracking.milestones_reached
+        stretch = tracking.percent_complete
+        if reached is None or stretch is None:
+            return None
+        steps = len(tracking.milestones) or DEFAULT_STEPS
+        if reached >= steps:
+            return 100
+        covered = max(reached - 1, 0) + min(max(stretch, 0), 100) / 100
+        return round(covered * 100 / (steps - 1))
 
     @property
     def last_event(self) -> TrackingEvent | None:
@@ -290,6 +320,7 @@ class AmazonOrdersCoordinator(DataUpdateCoordinator[AmazonOrdersData]):
                         item.title for item in shipment.items if item.title
                     ),
                     tracking=tracking,
+                    order_address=order.address,
                 )
                 self._fire_event_if_changed(package, previous)
 
@@ -360,7 +391,7 @@ class AmazonOrdersCoordinator(DataUpdateCoordinator[AmazonOrdersData]):
                 "previous_status": previous_code.lower() if previous_code else None,
                 "step": package.tracking.milestones_reached,
                 "step_label": package.step_label,
-                "progress": package.tracking.percent_complete,
+                "progress": package.progress,
                 "expected": package.tracking.promise_message,
                 "carrier": package.tracking.carrier,
                 "items": list(package.item_titles),

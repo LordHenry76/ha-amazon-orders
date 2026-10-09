@@ -43,6 +43,8 @@ PRIVATE = [
     "TESTTRACKING123",
     "TESTCUSTOMER",
     "ROMA",
+    "Roma",
+    "Via Esempio",
     "10,98",
     "progress-tracker",
 ]
@@ -103,6 +105,9 @@ async def test_diagnostics(hass: HomeAssistant, mock_amazon) -> None:
         False,
     ]
     assert package["percent_complete"] == 50
+    assert package["progress"] == 50
+    assert package["address_source"] == "orders_list"
+    assert package["address_lines"] == 4
     assert package["promise_message"] == "In arrivo domani"
     assert package["is_delivered"] is False
     assert package["events"] == [

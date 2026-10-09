@@ -1,10 +1,13 @@
-# Card pacco Amazon: intestazione, timeline a 4 tappe, tappa, ultimo evento, numero d'ordine e destinazione.
+# Card pacco Amazon, con il logo Amazon al posto dell'icona: intestazione, timeline a 4 tappe, tappa, ultimo evento, numero d'ordine e destinazione.
 # Senza pacchi in arrivo resta una riga sola; si espande quando c'è un pacco in viaggio.
 #
 # Richiede queste card (tutte disponibili in HACS):
 #   - Mushroom            https://github.com/piitaya/lovelace-mushroom
 #   - card-mod            https://github.com/thomasloven/lovelace-card-mod
 #   - Vertical Stack In Card  https://github.com/ofekashery/vertical-stack-in-card
+#
+# Serve anche l'immagine del logo: copia `custom_components/amazon_orders/brand/icon.png` in
+# `/config/www/amazon_orders/icon.png` (se la cartella `www` non esisteva, riavvia Home Assistant una volta).
 #
 # ID DELLE ENTITÀ: questo file usa gli ID che Home Assistant crea in italiano (`sensor.amazon_...`).
 # Controlla i tuoi in Impostazioni > Entità (cerca "amazon") e fai cerca/sostituisci prima di incollare.
@@ -32,14 +35,7 @@ cards:
       {% elif has_value('sensor.amazon_consegna_prossimo_pacco') %}{{ states('sensor.amazon_consegna_prossimo_pacco') }}{{ more }}{{ '\n' ~ event if has_value('sensor.amazon_ultimo_evento_prossimo_pacco') else '' }}
       {% else %}Pacco in arrivo{{ more }}{% endif %}
     multiline_secondary: true
-    icon: >
-      {% set i = state_attr('sensor.amazon_tappa_prossimo_pacco', 'step_index') | int(0) %}
-      {% if is_state('sensor.amazon_stato_prossimo_pacco', 'idle') %}mdi:package-variant-closed
-      {% elif i >= 3 %}mdi:truck-delivery
-      {% elif i == 2 %}mdi:truck-fast
-      {% else %}mdi:cart-check{% endif %}
-    color: >
-      {{ 'grey' if is_state('sensor.amazon_stato_prossimo_pacco', 'idle') else 'orange' }}
+    picture: /local/amazon_orders/icon.png
     # Il tocco apre i tuoi ordini sul sito Amazon
     tap_action:
       action: url
@@ -50,6 +46,22 @@ cards:
       perform_action: homeassistant.update_entity
       target:
         entity_id: sensor.amazon_stato_prossimo_pacco
+    card_mod:
+      style:
+        # Disco bianco dietro al logo, che altrimenti sparisce sui temi scuri.
+        ha-tile-icon$: |
+          .container {
+            background: #fff;
+            {% if is_state('sensor.amazon_stato_prossimo_pacco', 'idle') %}
+            filter: grayscale(1);
+            opacity: 0.5;
+            {% endif %}
+          }
+          .container img {
+            box-sizing: border-box;
+            padding: 5px;
+            object-fit: contain;
+          }
 
   # ── Timeline a 4 tappe: la linea avanza come nell'app Amazon (non cliccabile) ──
   - type: conditional

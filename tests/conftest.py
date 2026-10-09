@@ -14,6 +14,7 @@ from aiohttp.test_utils import TestServer
 from custom_components.amazon_orders.api.auth import AmazonAuth, LoginData
 from custom_components.amazon_orders.api.client import AmazonOrdersClient
 from custom_components.amazon_orders.api.models import (
+    Address,
     Milestone,
     Order,
     OrderItem,
@@ -156,6 +157,7 @@ def make_order(
                 items=(OrderItem(f"Example product {number}", None, None),),
             ),
         ),
+        address=Address(("Test User", "Via Esempio 1", "ROMA, RM 00100", "Italia")),
     )
 
 

@@ -62,6 +62,16 @@ def _package(package: Package | None) -> dict[str, Any] | None:
         ],
         "milestones_reached": tracking.milestones_reached,
         "percent_complete": tracking.percent_complete,
+        "progress": package.progress,
+        # Where the address comes from and how many lines it has, never what it says.
+        "address_source": (
+            "tracking"
+            if tracking.address
+            else "orders_list"
+            if package.order_address
+            else None
+        ),
+        "address_lines": len(package.address.lines) if package.address else 0,
         "promise_message": tracking.promise_message,
         "carrier": tracking.carrier,
         "timezone": tracking.timezone,

@@ -1,4 +1,4 @@
-# Amazon package card: header with a progress bar, four-step timeline, step and last event.
+# Amazon package card: header, four-step timeline, step, last event, order number and destination.
 # It stays on one line while nothing is on its way and expands when a package is.
 #
 # It needs these cards (all available in HACS):
@@ -10,10 +10,12 @@
 # Check yours in Settings > Entities (search "amazon") and find/replace them before pasting.
 #
 # It shows the "next package", the one furthest along. Once delivered the card goes back to idle.
+# PRIVACY: the last row shows the order number, the recipient and the town. If others can see
+# the dashboard, delete the last block ("Order number and destination").
 
 type: custom:vertical-stack-in-card
 cards:
-  # ── Header + progress bar ──
+  # ── Header ──
   - type: custom:mushroom-template-card
     entity: sensor.amazon_next_package_status
     primary: >
@@ -48,27 +50,8 @@ cards:
       perform_action: homeassistant.update_entity
       target:
         entity_id: sensor.amazon_next_package_status
-    card_mod:
-      style: |
-        {% set idle = is_state('sensor.amazon_next_package_status', 'idle') %}
-        ha-card {
-          position: relative;
-          padding-bottom: {{ '0' if idle else '14px' }} !important;
-        }
-        ha-card::after {
-          {% set p = states('sensor.amazon_next_package_progress') | int(0) %}
-          content: "";
-          display: {{ 'none' if idle else 'block' }};
-          position: absolute;
-          left: 16px; right: 16px; bottom: 4px;
-          height: 6px;
-          border-radius: 3px;
-          background: linear-gradient(90deg,
-            #ff9900 {{ p }}%,
-            rgba(127, 127, 127, 0.25) {{ p }}%);
-        }
 
-  # ── Four-step timeline (not clickable) ──
+  # ── Four-step timeline: the line moves on as in the Amazon app (not clickable) ──
   - type: conditional
     conditions:
       - condition: state
@@ -79,8 +62,7 @@ cards:
       alignment: justify
       card_mod:
         style: |
-          {% set i = state_attr('sensor.amazon_next_package_step', 'step_index') | int(0) %}
-          {% set stop = (([i - 1, 0] | max) * 100 / 3) | round(0) %}
+          {% set stop = states('sensor.amazon_next_package_progress') | int(0) %}
           ha-card {
             position: relative;
             z-index: 0;
@@ -179,7 +161,7 @@ cards:
       card_mod:
         style: |
           ha-card {
-            padding: 4px 16px 12px !important;
+            padding: 4px 16px 4px !important;
             pointer-events: none;
           }
       chips:
@@ -207,7 +189,8 @@ cards:
             content: >
               {% set time = state_attr('sensor.amazon_next_package_last_event', 'time') %}
               {% set place = state_attr('sensor.amazon_next_package_last_event', 'location') %}
-              {{ [time, place] | select | join(' · ') or states('sensor.amazon_next_package_last_event') }}
+              {% set day = state_attr('sensor.amazon_next_package_last_event', 'date') %}
+              {{ [time, place] | select | join(' · ') or day or states('sensor.amazon_next_package_last_event') }}
             icon_color: orange
             tap_action: { action: none }
             hold_action: { action: none }
@@ -227,3 +210,36 @@ cards:
             tap_action: { action: none }
             hold_action: { action: none }
             double_tap_action: { action: none }
+
+  # ── Order number and destination (not clickable) ──
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: sensor.amazon_next_package_status
+        state_not: idle
+    card:
+      type: custom:mushroom-chips-card
+      alignment: center
+      card_mod:
+        style: |
+          ha-card {
+            padding: 0 16px 12px !important;
+            pointer-events: none;
+          }
+      chips:
+        - type: template
+          icon: mdi:receipt-text-outline
+          content: "{{ state_attr('sensor.amazon_next_package_status', 'order_id') }}"
+          icon_color: grey
+          tap_action: { action: none }
+          hold_action: { action: none }
+          double_tap_action: { action: none }
+        - type: template
+          icon: mdi:map-marker-account-outline
+          content: >
+            {% set s = 'sensor.amazon_next_package_status' %}
+            {{ [state_attr(s, 'recipient'), state_attr(s, 'delivery_city')] | select | join(' · ') }}
+          icon_color: grey
+          tap_action: { action: none }
+          hold_action: { action: none }
+          double_tap_action: { action: none }

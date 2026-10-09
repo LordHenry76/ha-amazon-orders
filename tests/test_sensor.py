@@ -90,7 +90,7 @@ async def test_package_on_its_way(hass: HomeAssistant, mock_amazon) -> None:
     mock_amazon.trackings[tracking_url(1)] = make_tracking(
         "TEST_ON_ITS_WAY",
         steps=2,
-        progress=50,
+        progress=80,
         expected="In arrivo domani",
         message="Spedito",
     )
@@ -109,13 +109,19 @@ async def test_package_on_its_way(hass: HomeAssistant, mock_amazon) -> None:
             "milestone": "test_on_its_way",
             "step": 2,
             "step_label": "Spedito",
-            "progress": 50,
+            # Shipped and 80 % of the way to "out for delivery": 1.8 of 3 stretches.
+            "progress": 60,
+            "step_progress": 80,
             "expected": "In arrivo domani",
             "carrier": "Consegna da Amazon",
             "status_text": "In arrivo",
             "status_detail": "Dettaglio",
             "last_event": "Spedito",
             "tracking_url": tracking_url(1),
+            # From the orders list: the tracking page has no address here.
+            "recipient": "Test User",
+            "delivery_city": "Roma",
+            "delivery_address": "Via Esempio 1, ROMA, RM 00100, Italia",
         }
     ]
 
@@ -133,8 +139,9 @@ async def test_package_on_its_way(hass: HomeAssistant, mock_amazon) -> None:
         "Consegnato",
     ]
     progress = _state(hass, "next_package_progress")
-    assert progress.state == "50"
+    assert progress.state == "60"
     assert progress.attributes["unit_of_measurement"] == "%"
+    assert progress.attributes["step_progress"] == 80
     assert _state(hass, "next_package_expected").state == "In arrivo domani"
     event = _state(hass, "next_package_last_event")
     assert event.state == "Spedito"

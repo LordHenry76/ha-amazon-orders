@@ -30,6 +30,7 @@ def package_attributes(package: Package | None) -> dict[str, Any]:
     if package is None:
         return {}
     event = package.last_event
+    address = package.address
     return {
         "order_id": package.order_id,
         "order_placed": package.placed_text,
@@ -40,13 +41,17 @@ def package_attributes(package: Package | None) -> dict[str, Any]:
         else None,
         "step": package.tracking.milestones_reached,
         "step_label": package.step_label,
-        "progress": package.tracking.percent_complete,
+        "progress": package.progress,
+        "step_progress": package.tracking.percent_complete,
         "expected": package.tracking.promise_message,
         "carrier": package.tracking.carrier,
         "status_text": package.status_text,
         "status_detail": package.status_detail,
         "last_event": event.message if event else None,
         "tracking_url": package.tracking_url,
+        "recipient": address.name if address else None,
+        "delivery_city": address.city if address else None,
+        "delivery_address": address.street if address else None,
     }
 
 
@@ -122,7 +127,12 @@ SENSORS: tuple[AmazonOrdersSensorDescription, ...] = (
         key="next_package_progress",
         translation_key="next_package_progress",
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=_next(lambda package: package.tracking.percent_complete),
+        value_fn=_next(lambda package: package.progress),
+        attributes_fn=lambda data: (
+            {"step_progress": data.next_package.tracking.percent_complete}
+            if data.next_package
+            else {}
+        ),
     ),
     AmazonOrdersSensorDescription(
         key="next_package_expected",

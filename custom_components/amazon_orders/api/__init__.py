@@ -11,9 +11,18 @@ from .exceptions import (
     AmazonError,
     AmazonParseError,
 )
-from .models import Milestone, Order, OrderItem, Shipment, Tracking, TrackingEvent
+from .models import (
+    Address,
+    Milestone,
+    Order,
+    OrderItem,
+    Shipment,
+    Tracking,
+    TrackingEvent,
+)
 
 __all__ = [
+    "Address",
     "AmazonAuth",
     "AmazonAuthError",
     "AmazonCaptchaError",

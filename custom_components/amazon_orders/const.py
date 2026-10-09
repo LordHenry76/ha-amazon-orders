@@ -34,6 +34,9 @@ MAX_ACTIVE_INTERVAL: Final = 600
 # Amazon shows four steps: ordered, shipped, out for delivery, delivered (on
 # amazon.it "Ordinato", "Spedito", "In consegna", "Consegnato").
 OUT_FOR_DELIVERY_MIN_STEPS: Final = 3
+# Steps of a delivery when the page does not list them: ordered, shipped, out
+# for delivery, delivered.
+DEFAULT_STEPS: Final = 4
 
 # Tracking pages of shipments never seen before, read at most per update. It
 # spreads the requests of the first run, when every recent order is new.

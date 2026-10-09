@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from custom_components.amazon_orders.api.exceptions import AmazonParseError
+from custom_components.amazon_orders.api.models import Address
 from custom_components.amazon_orders.api.parser import (
     is_captcha_page,
     parse_orders,
@@ -51,6 +52,38 @@ def test_orders_list(load_fixture) -> None:
     assert item.image_url == (
         "https://m.media-amazon.com/images/I/test-B000TEST01._SS142_.jpg"
     )
+
+
+def test_orders_list_address(load_fixture) -> None:
+    orders = parse_orders(load_fixture("orders.html"), BASE_URL)
+
+    assert orders[0].address == Address(
+        ("Test User", "VIA ESEMPIO 1", "SAN TEST MARINA, TE 00000", "Italia")
+    )
+    assert orders[0].address.name == "Test User"
+    assert orders[0].address.city == "San Test Marina"
+    assert orders[0].address.street == (
+        "VIA ESEMPIO 1, SAN TEST MARINA, TE 00000, Italia"
+    )
+    # No "Ship to" template in the second order.
+    assert orders[1].address is None
+
+
+@pytest.mark.parametrize(
+    ("lines", "city"),
+    [
+        (
+            ("Name", "Via Esempio, 12", "SAN TEST MARINA, XX 00000", "Italia"),
+            "San Test Marina",
+        ),
+        (("Name", "Via Esempio 1", "3° piano", "L'AQUILA, AQ 67100"), "L'Aquila"),
+        (("Name", "Via Esempio 1", "Testopoli, XX 00000"), "Testopoli"),
+        (("Name", "Via Esempio 1"), None),
+        (("Name",), None),
+    ],
+)
+def test_address_city(lines: tuple[str, ...], city: str | None) -> None:
+    assert Address(lines).city == city
 
 
 def test_order_without_tracking_link(load_fixture) -> None:
@@ -135,6 +168,37 @@ def test_tracking_events(load_fixture) -> None:
     # The first event of a shipment has neither a time nor a place.
     assert events[-1].time_text is None
     assert events[-1].location is None
+
+
+def test_tracking_address_and_courier_places() -> None:
+    """Seen once a package has been shipped by a courier other than Amazon."""
+    html = (
+        '<script type="a-state" data-a-state="{&quot;key&quot;:&quot;page-state&quot;}">'
+        '{"shortStatus":"IN_TRANSIT","progressTracker":{"lastReachedMilestone":'
+        '"SHIPPED","numberOfReachedMilestones":2,"lastTransitionPercentComplete":92}}'
+        "</script>"
+        '<div id="shippingAddress-container"><div class="a-row shippingAddress">'
+        "<p>Test User</p><p>Via Esempio 1</p><p>3° piano</p>"
+        "<p>TESTOPOLI, XX 00000</p></div></div>"
+        '<div id="tracking-events-container">'
+        '<div class="tracking-event-date">mercoledì 7 ottobre</div>'
+        '<span class="tracking-event-time">22:04</span>'
+        '<span class="tracking-event-message">Spedizione partita</span>'
+        '<span class="tracking-event-location">Test HUB IT, </span>'
+        "</div>"
+    )
+
+    tracking = parse_tracking(html)
+
+    assert tracking.address is not None
+    assert tracking.address.name == "Test User"
+    assert tracking.address.city == "Testopoli"
+    assert tracking.address.street == "Via Esempio 1, 3° piano, TESTOPOLI, XX 00000"
+    assert tracking.events[0].location == "Test HUB IT"
+
+
+def test_tracking_without_address(load_fixture) -> None:
+    assert parse_tracking(load_fixture("tracking_ordered.html")).address is None
 
 
 @pytest.mark.parametrize("page", ["signin.html", "orders.html"])

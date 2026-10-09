@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import timedelta
 
 import pytest
@@ -28,7 +29,7 @@ from custom_components.amazon_orders.const import (
     EVENT_PACKAGE_UPDATE,
     MAX_NEW_TRACKING_PER_UPDATE,
 )
-from custom_components.amazon_orders.coordinator import shipment_key
+from custom_components.amazon_orders.coordinator import Package, shipment_key
 
 from .conftest import (
     EMAIL,
@@ -181,7 +182,8 @@ async def test_events(hass: HomeAssistant, mock_amazon) -> None:
         "previous_status": "test_on_its_way",
         "step": 3,
         "step_label": "In consegna",
-        "progress": 75,
+        # Out for delivery and 75 % of the last stretch: 2.75 of 3 stretches.
+        "progress": 92,
         "expected": "In arrivo oggi",
         "carrier": "Consegna da Amazon",
         "items": ["Example product 1"],
@@ -357,3 +359,53 @@ def test_shipment_key() -> None:
     assert shipment_key(Order("123-1", None, None, None, (odd,)), odd) == (
         "123-1:/progress-tracker/package/abc"
     )
+
+
+@pytest.mark.parametrize(
+    ("status", "steps", "stretch", "expected"),
+    [
+        # Just ordered: a third of the way to "shipped".
+        ("ORDER_PLACED", 1, 32, 11),
+        # Shipped, almost out for delivery (seen on a real package: 92).
+        ("IN_TRANSIT", 2, 92, 64),
+        ("IN_TRANSIT", 2, 32, 44),
+        ("OUT_FOR_DELIVERY", 3, 0, 67),
+        ("DELIVERED", 4, 100, 100),
+        # Values outside the range are clamped.
+        ("IN_TRANSIT", 2, 250, 67),
+        ("IN_TRANSIT", 2, None, None),
+    ],
+)
+def test_package_progress(
+    status: str, steps: int, stretch: int | None, expected: int | None
+) -> None:
+    tracking = replace(make_tracking(status, steps=steps), percent_complete=stretch)
+    package = Package(
+        key="k",
+        order_id="123-0000001-7654321",
+        placed_text=None,
+        status_text=None,
+        status_detail=None,
+        tracking_url=tracking_url(1),
+        item_titles=(),
+        tracking=tracking,
+    )
+    assert package.progress == expected
+
+
+def test_package_progress_without_steps() -> None:
+    """Without the list of steps on the page, a delivery has four of them."""
+    tracking = replace(
+        make_tracking("IN_TRANSIT", steps=2), milestones=(), percent_complete=50
+    )
+    package = Package(
+        key="k",
+        order_id="123-0000001-7654321",
+        placed_text=None,
+        status_text=None,
+        status_detail=None,
+        tracking_url=tracking_url(1),
+        item_titles=(),
+        tracking=tracking,
+    )
+    assert package.progress == 50
