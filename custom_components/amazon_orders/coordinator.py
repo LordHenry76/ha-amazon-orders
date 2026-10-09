@@ -93,7 +93,7 @@ class Package:
         which is about two thirds of the whole way.
         """
         tracking = self.tracking
-        if tracking.is_delivered:
+        if tracking.is_complete:
             return 100
         reached = tracking.milestones_reached
         stretch = tracking.percent_complete
@@ -324,7 +324,7 @@ class AmazonOrdersCoordinator(DataUpdateCoordinator[AmazonOrdersData]):
                 )
                 self._fire_event_if_changed(package, previous)
 
-                if tracking.is_delivered:
+                if tracking.is_complete:
                     if key not in self._delivered:
                         self._delivered[key] = tracking
                         store_changed = True
@@ -368,11 +368,15 @@ class AmazonOrdersCoordinator(DataUpdateCoordinator[AmazonOrdersData]):
         if not self._first_update_done or package.key in self._delivered:
             return
         if previous is None:
-            if package.tracking.is_delivered:
+            if package.tracking.is_complete:
                 return
             kind = "new"
-        elif package.tracking.is_delivered:
-            kind = "delivered"
+        elif package.tracking.is_complete:
+            kind = (
+                "delivered"
+                if package.tracking.is_delivered
+                else "picked_up"
+            )
         elif _signature(previous) != _signature(package.tracking):
             kind = "update"
         else:
