@@ -409,3 +409,141 @@ def test_package_progress_without_steps() -> None:
         tracking=tracking,
     )
     assert package.progress == 50
+
+async def test_locker_picked_up_is_not_in_transit(
+    hass: HomeAssistant, mock_amazon
+) -> None:
+    """A collected Locker package is a completed shipment."""
+    mock_amazon.get_orders.return_value = [make_order(1)]
+    mock_amazon.trackings[tracking_url(1)] = make_tracking(
+        "PICKED_UP",
+        steps=4,
+        progress=100,
+        expected="Ritirato 25 settembre",
+        message="Spedizione ritirata dall'Amazon Locker",
+    )
+
+    coordinator = (await _setup(hass)).runtime_data
+
+    assert coordinator.data.in_transit == ()
+    assert coordinator.data.next_package is None
+    assert coordinator.data.last_delivered is not None
+    assert coordinator.data.last_delivered.status == "picked_up"
+    assert coordinator.data.last_delivered.progress == 100
+    assert coordinator.update_interval == IDLE
+
+    await coordinator.async_refresh()
+
+    # Completed packages are not tracked again.
+    assert mock_amazon.get_tracking.call_count == 1
+
+
+async def test_locker_pickup_generates_completion_event(
+    hass: HomeAssistant, mock_amazon
+) -> None:
+    """A pickup generates a distinct event, not a delivery event."""
+    events = async_capture_events(hass, EVENT_PACKAGE_UPDATE)
+
+    mock_amazon.get_orders.return_value = [make_order(1)]
+    mock_amazon.trackings[tracking_url(1)] = on_its_way()
+
+    entry = await _setup(hass)
+    coordinator = entry.runtime_data
+    await hass.async_block_till_done()
+
+    assert len(coordinator.data.in_transit) == 1
+    assert events == []
+
+    mock_amazon.trackings[tracking_url(1)] = make_tracking(
+        "PICKED_UP",
+        steps=4,
+        progress=100,
+        expected="Ritirato 25 settembre",
+        message="Spedizione ritirata dall'Amazon Locker",
+    )
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.data.in_transit == ()
+    assert len(events) == 1
+
+    event = events[0].data
+
+    assert event["type"] == "picked_up"
+    assert event["status"] == "picked_up"
+    assert event["previous_status"] == "test_on_its_way"
+    assert event["is_delivered"] is False
+    assert event["progress"] == 100
+
+    # No repeated completion events.
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert mock_amazon.get_tracking.call_count == 2
+
+
+async def test_locker_pickup_persists_across_restart(
+    hass: HomeAssistant, mock_amazon, hass_storage
+) -> None:
+    """A collected package remains completed after HA restarts."""
+    mock_amazon.get_orders.return_value = [make_order(1)]
+    mock_amazon.trackings[tracking_url(1)] = make_tracking(
+        "PICKED_UP",
+        steps=4,
+        progress=100,
+        expected="Ritirato 25 settembre",
+        message="Spedizione ritirata dall'Amazon Locker",
+    )
+
+    entry = await _setup(hass)
+
+    key = f"{DOMAIN}.{entry.entry_id}"
+    stored = hass_storage[key]["data"]["delivered"]
+
+    assert len(stored) == 1
+    assert list(stored.values())[0]["short_status"] == "PICKED_UP"
+    assert mock_amazon.get_tracking.call_count == 1
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    coordinator = entry.runtime_data
+
+    assert coordinator.data.in_transit == ()
+    assert coordinator.data.last_delivered is not None
+    assert coordinator.data.last_delivered.status == "picked_up"
+    assert coordinator.data.last_delivered.progress == 100
+
+    # No additional tracking request after restart.
+    assert mock_amazon.get_tracking.call_count == 1
+
+
+def test_locker_picked_up_is_terminal() -> None:
+    """PICKED_UP is complete without being a home delivery."""
+    tracking = make_tracking(
+        "PICKED_UP",
+        steps=4,
+        progress=100,
+    )
+
+    assert tracking.is_complete is True
+    assert tracking.is_delivered is False
+
+    package = Package(
+        key="locker",
+        order_id="123-0000001-7654321",
+        placed_text=None,
+        status_text="Ritirato 25 settembre",
+        status_detail=None,
+        tracking_url=tracking_url(1),
+        item_titles=(),
+        tracking=tracking,
+    )
+
+    assert package.status == "picked_up"
+    assert package.progress == 100
