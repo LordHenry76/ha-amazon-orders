@@ -3,9 +3,10 @@
 Track the deliveries of your Amazon orders in Home Assistant: status, expected delivery and
 progress of each package, so you can build automations on them.
 
-> **Work in progress.** Signing in, reading the orders and the entities work. So far they have
-> been tried on an order just placed and on packages already delivered: what Amazon reports for
-> a package that has been shipped or is out for delivery has not been observed yet.
+> **Early release.** Signing in, reading the orders and the entities work, and have been followed
+> on a real order through every step, from placed to delivered. Not observed yet: orders split
+> into several shipments, the live map Amazon shows for its own deliveries, and how the sign-in
+> renewal and the removal of the device behave against Amazon.
 
 > **Unofficial.** Amazon has no public API for customers' orders. This integration reads the
 > same pages the Amazon website shows you when you are signed in. It can break at any time if
