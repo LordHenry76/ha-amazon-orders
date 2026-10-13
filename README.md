@@ -70,7 +70,7 @@ delivered yet, the one that has gone through the most steps.
 | Next package progress | How far the whole delivery has gone, in percent (0 when ordered, 100 when delivered). The attribute `step_progress` is Amazon's own figure: how much of the stretch to the next step has been covered. |
 | Next package delivery | Amazon's own message about the delivery, in the language of the website (e.g. "In arrivo domani"). |
 | Next package last event | The latest entry of the tracking history; date, time and place are attributes. |
-| Last delivered package | Amazon's message for the most recent delivery (e.g. "Consegnato 4 ottobre"). |
+| Last delivered package | Amazon's message for the most recent delivery or Amazon Locker pickup (e.g. "Consegnato 4 ottobre"). |
 
 The status sensor and the last delivered package carry the details as attributes: `order_id`,
 `order_placed`, `items`, `status`, `milestone`, `step`, `step_label`, `progress`, `step_progress`,
@@ -85,14 +85,15 @@ Limits:
 - Only the shipments Amazon offers a "Track package" page for are followed. Orders fulfilled by
   third-party sellers often have none, and are ignored.
 - Only the orders of the last three months are read.
-- The state codes seen so far are `order_placed`, `in_transit`, `out_for_delivery` and
-  `delivered`; any other is shown as Amazon sends it.
+- The state codes seen so far are `order_placed`, `in_transit`, `out_for_delivery`, `delivered`
+  and, for packages collected from an Amazon Locker, `picked_up`; any other is shown as Amazon
+  sends it.
 
 ## Event
 
 `amazon_orders_package_update` fires when a package appears (`type: new`), when its state, step,
-progress or delivery message changes (`type: update`) and when it is delivered
-(`type: delivered`):
+progress or delivery message changes (`type: update`), when it is delivered (`type: delivered`)
+and when it is collected from an Amazon Locker (`type: picked_up`):
 
 ```yaml
 triggers:
@@ -109,6 +110,9 @@ actions:
 
 Event data: `type`, `order_id`, `status`, `previous_status`, `step`, `step_label`, `progress`, `expected`,
 `carrier`, `items`, `last_event`, `is_delivered`, `config_entry_id`.
+
+An automation on `type: delivered` does not fire for Locker pickups: to be told about both, add
+a second identical trigger with `type: picked_up`.
 
 Nothing fires for what is found when Home Assistant starts.
 

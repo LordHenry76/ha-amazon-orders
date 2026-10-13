@@ -372,11 +372,7 @@ class AmazonOrdersCoordinator(DataUpdateCoordinator[AmazonOrdersData]):
                 return
             kind = "new"
         elif package.tracking.is_complete:
-            kind = (
-                "delivered"
-                if package.tracking.is_delivered
-                else "picked_up"
-            )
+            kind = "delivered" if package.tracking.is_delivered else "picked_up"
         elif _signature(previous) != _signature(package.tracking):
             kind = "update"
         else:

@@ -504,7 +504,7 @@ async def test_locker_pickup_persists_across_restart(
     stored = hass_storage[key]["data"]["delivered"]
 
     assert len(stored) == 1
-    assert list(stored.values())[0]["short_status"] == "PICKED_UP"
+    assert next(iter(stored.values()))["short_status"] == "PICKED_UP"
     assert mock_amazon.get_tracking.call_count == 1
 
     assert await hass.config_entries.async_unload(entry.entry_id)
