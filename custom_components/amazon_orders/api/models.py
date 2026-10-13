@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 STATUS_DELIVERED = "DELIVERED"
+STATUS_PICKED_UP = "PICKED_UP"
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,3 +128,11 @@ class Tracking:
     def is_delivered(self) -> bool:
         """Return True when the package has been delivered."""
         return STATUS_DELIVERED in (self.short_status, self.last_milestone)
+
+    @property
+    def is_complete(self) -> bool:
+        """Return True when a shipment has reached a terminal state."""
+        return self.is_delivered or STATUS_PICKED_UP in (
+            self.short_status,
+            self.last_milestone,
+        )
