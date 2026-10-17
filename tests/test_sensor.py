@@ -117,6 +117,9 @@ async def test_package_on_its_way(hass: HomeAssistant, mock_amazon) -> None:
             "status_text": "In arrivo",
             "status_detail": "Dettaglio",
             "last_event": "Spedito",
+            "last_event_date": "domenica 4 ottobre",
+            "last_event_time": "16:07",
+            "last_event_location": "ROMA, IT",
             "tracking_url": tracking_url(1),
             # From the orders list: the tracking page has no address here.
             "recipient": "Test User",

@@ -74,8 +74,9 @@ delivered yet, the one that has gone through the most steps.
 
 The status sensor and the last delivered package carry the details as attributes: `order_id`,
 `order_placed`, `items`, `status`, `milestone`, `step`, `step_label`, `progress`, `step_progress`,
-`expected`, `carrier`, `status_text`, `status_detail`, `last_event`, `tracking_url`, `recipient`,
-`delivery_city`, `delivery_address`.
+`expected`, `carrier`, `status_text`, `status_detail`, `last_event`, `last_event_date`,
+`last_event_time`, `last_event_location`, `tracking_url`, `recipient`, `delivery_city`,
+`delivery_address`.
 
 The address attributes come from your Amazon account and are personal data: they are left out of
 the event and of the diagnostics file.
